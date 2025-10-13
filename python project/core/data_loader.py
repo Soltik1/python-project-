@@ -1,4 +1,6 @@
 # core/data_loader.py
+"""Утилиты для загрузки типизированных тестовых данных из `data/seed.json`."""
+
 import json
 import os
 from typing import Tuple
@@ -8,8 +10,10 @@ BASE = os.path.join(os.path.dirname(__file__), "..")
 SEED = os.path.join(BASE, "data", "seed.json")
 
 def load_seed() -> Tuple[Tuple[Project, ...], Tuple[User, ...], Tuple[Task, ...], Tuple[Comment, ...]]:
-    """
-    Загружает seed.json и возвращает кортежи (projects, users, tasks, comments).
+    """Загрузить seed.json и вернуть неизменяемые кортежи типизированных сущностей.
+
+    Возвращает 4-кортеж: (projects, users, tasks, comments).
+    Бросает FileNotFoundError с подсказкой, если seed отсутствует.
     """
     if not os.path.exists(SEED):
         raise FileNotFoundError(f"seed.json not found: {SEED}. Сначала сгенерируй его через scripts/generate_seed.py")
