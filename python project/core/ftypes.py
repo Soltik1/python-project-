@@ -112,11 +112,6 @@ class Either(Generic[E, T], ABC):
         """Применяет функцию к ошибке, если Either содержит Left"""
         pass
 
-    @abstractmethod
-    def get_or_else(self, default: T) -> T:
-        """Возвращает значение Right или default, если Left"""
-        pass
-
 class Left(Generic[E, T], Either[E, T]):
     """Контейнер для ошибки"""
     
@@ -137,9 +132,6 @@ class Left(Generic[E, T], Either[E, T]):
     
     def map_left(self, f: Callable[[E], E]) -> 'Either[E, T]':
         return Left(f(self._error))
-    
-    def get_or_else(self, default: T) -> T:
-        return default
     
     def __repr__(self) -> str:
         return f"Left({self._error})"
@@ -165,9 +157,6 @@ class Right(Generic[E, T], Either[E, T]):
     def map_left(self, f: Callable[[E], E]) -> 'Either[E, T]':
         return Right(self._value)
     
-    def get_or_else(self, default: T) -> T:
-        return self._value
-    
     def __repr__(self) -> str:
         return f"Right({self._value})"
 
@@ -177,7 +166,6 @@ def maybe_from_optional(value: Optional[T]) -> Maybe[T]:
     """Создает Maybe из Optional значения"""
     return Some(value) if value is not None else Nothing()
 
-
 def either_from_exception(func: Callable[[], T]) -> Either[str, T]:
     """Выполняет функцию и возвращает Either с результатом или ошибкой"""
     try:
@@ -185,7 +173,6 @@ def either_from_exception(func: Callable[[], T]) -> Either[str, T]:
         return Right(result)
     except Exception as e:
         return Left(str(e))
-
 
 def safe_divide(a: float, b: float) -> Either[str, float]:
     """Безопасное деление с Either"""
