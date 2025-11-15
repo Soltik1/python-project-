@@ -1,5 +1,3 @@
-# core/report.py
-# Отчеты и аналитика для всех лабораторных работ
 from typing import Tuple, Dict, List, Any
 from .domain import Task, Project, User, Comment
 from .transforms import (
@@ -12,7 +10,17 @@ from .transforms import (
 )
 from .ftypes import Maybe, Some, Nothing, Either, Right, Left
 
-# === Лаба #1: Overview отчеты ===
+
+
+
+
+
+
+
+
+
+
+# === Лаба1: Overview отчеты ===
 
 def overview_stats(projects: Tuple[Project, ...], users: Tuple[User, ...], tasks: Tuple[Task, ...]) -> Dict[str, Any]:
     """
@@ -46,34 +54,67 @@ def project_overview_report(tasks: Tuple[Task, ...], project_id: str) -> Dict[st
     
     return counts
 
-# === Лаба #2: Фильтры и отчеты ===
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# === Лаба2: Фильтры и отчеты ===
 
 def filtered_tasks_report(tasks: Tuple[Task, ...], filters: Dict[str, Any]) -> Tuple[Task, ...]:
     """
-    Отчет с применением фильтров через замыкания.
+    Отчет с применением фильтров через замыкания и лямбды.
+    Демонстрирует использование лямбд для комбинирования фильтров.
+
+    1. Начинаем с полного списка задач: filtered = tasks
+    2. Последовательно применяем фильтры:
+        Если есть фильтр по приоритету → создаем замыкание и фильтруем через лямбду
+        Если есть фильтр по исполнителю → создаем замыкание и фильтруем через лямбду
+        Если есть фильтр по дате → создаем замыкание и фильтруем через лямбду
+    3. Возвращаем отфильтрованный результат
     """
     filtered = tasks
     
-    # Применяем фильтры последовательно
+    # Применяем фильтры последовательно с использованием лямбд
     if "priority" in filters:
         priority_filter = by_priority(filters["priority"])
-        filtered = tuple(t for t in filtered if priority_filter(t))
+        # Используем лямбду для фильтрации
+        filtered = tuple(filter(lambda t: priority_filter(t), filtered))
     
     if "assignee" in filters:
         assignee_filter = by_assignee(filters["assignee"])
-        filtered = tuple(t for t in filtered if assignee_filter(t))
+        # Используем лямбду для фильтрации
+        filtered = tuple(filter(lambda t: assignee_filter(t), filtered))
     
     if "date_range" in filters:
         start_date = filters["date_range"]["start"]
         end_date = filters["date_range"]["end"]
         date_filter = by_date_range(start_date, end_date)
-        filtered = tuple(t for t in filtered if date_filter(t))
+        # Используем лямбду для фильтрации
+        filtered = tuple(filter(lambda t: date_filter(t), filtered))
     
     return filtered
 
 def user_workload_report(tasks: Tuple[Task, ...], users: Tuple[User, ...]) -> Dict[str, Dict[str, int]]:
     """
     Отчет по загрузке пользователей.
+
+    1.Создает отчет по загрузке каждого пользователя
+    2.Для каждого пользователя:
+        Находит все задачи, назначенные на этого пользователя
+        Подсчитывает общее количество задач
+        Подсчитывает задачи по каждому статусу (todo, in_progress, review, done)
     """
     workload = {}
     
@@ -89,7 +130,20 @@ def user_workload_report(tasks: Tuple[Task, ...], users: Tuple[User, ...]) -> Di
     
     return workload
 
-# === Лаба #3: Кэшированные отчеты ===
+
+
+
+
+
+
+
+
+
+
+
+
+
+# === Лаба3: Кэшированные отчеты ===
 
 def overdue_tasks_report_cached(tasks: Tuple[Task, ...], rules: Tuple[str, ...]) -> Tuple[Task, ...]:
     """
@@ -122,7 +176,24 @@ def performance_comparison_report(tasks: Tuple[Task, ...], rules: Tuple[str, ...
         "results_identical": result1 == result2
     }
 
-# === Лаба #4: Отчеты с Maybe/Either ===
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# === Лаба4: Отчеты с Maybe/Either ===
 
 def safe_task_report(tasks: Tuple[Task, ...], task_ids: List[str]) -> Dict[str, Maybe[Task]]:
     """
