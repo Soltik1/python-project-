@@ -88,3 +88,5 @@ def test_project_overview_report_filters_by_project():
     assert report["total"] == 2
     assert report["todo"] == 1
     assert report["done"] == 1
+
+
