@@ -119,3 +119,5 @@ def test_user_workload_report_counts_by_status():
     assert report["Alice"]["in_progress"] == 1
     assert report["Alice"]["done"] == 1
     assert report["Bob"]["review"] == 1
+
+
