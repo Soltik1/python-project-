@@ -90,3 +90,5 @@ def test_performance_comparison_report_has_better_second_call():
     assert report["results_identical"] is True
     # второй вызов обычно быстрее (может быть равным в среде CI)
     assert report["second_call_time"] <= report["first_call_time"]
+
+
