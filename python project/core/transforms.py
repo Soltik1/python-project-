@@ -1,6 +1,6 @@
 # core/transforms.py
 # Лабораторная работа #1: Чистые функции + иммутабельность + HOF
-from typing import Tuple, Callable, TYPE_CHECKING
+from typing import Tuple, Callable, Dict, TYPE_CHECKING
 from .domain import Task, Comment, Project, User
 from functools import lru_cache, reduce
 from datetime import datetime
@@ -9,7 +9,17 @@ import operator
 if TYPE_CHECKING:
     from .ftypes import Maybe, Either
 
-# === Лаба #1: Чистые функции + иммутабельность + HOF ===
+
+
+
+
+
+
+
+
+
+
+# === Лаба1: Чистые функции + иммутабельность + HOF ===
 
 def add_task(tasks: Tuple[Task, ...], t: Task) -> Tuple[Task, ...]:
     """
@@ -28,62 +38,97 @@ def filter_by_status(tasks: Tuple[Task, ...], status: str) -> Tuple[Task, ...]:
 def avg_tasks_per_user(tasks: Tuple[Task, ...]) -> float:
     """
     Чистая функция для вычисления среднего количества задач на пользователя.
-    Использует функциональный подход с reduce.
+    Использует функциональный подход с reduce и именованной функцией.
+
+    1. Извлекаем всех исполнителей задач
+    2. Используем reduce для подсчета задач по пользователям через именованную функцию
+    3. Вычисляем среднее количество задач на пользователя
     """
     assigned = [t.assignee for t in tasks if t.assignee]
     if not assigned:
         return 0.0
     
+    def count_assignee(acc: Dict[str, int], assignee: str) -> Dict[str, int]:
+        """Именованная функция для подсчета задач по исполнителям"""
+        return {**acc, assignee: acc.get(assignee, 0) + 1}
+    
     # Используем reduce для подсчета задач по пользователям
-    user_counts = reduce(
-        lambda acc, assignee: {**acc, assignee: acc.get(assignee, 0) + 1},
-        assigned,
-        {}
-    )
+    user_counts = reduce(count_assignee, assigned, {})
     
     # Используем reduce для вычисления среднего
     total_tasks = reduce(operator.add, user_counts.values(), 0)
     return total_tasks / len(user_counts) if user_counts else 0.0
     
-# === Лаба #2: Лямбда и замыкания + рекурсия ===
+
+
+
+
+
+
+
+
+
+
+
+
+
+# === Лаба2: Лямбда и замыкания + рекурсия ===
 
 # Замыкания-фильтры
 def by_priority(priority: str) -> Callable[[Task], bool]:
     """
     Замыкание для фильтрации задач по приоритету.
-    Возвращает функцию-предикат.
+    Возвращает лямбда-функцию-предикат.
+
+    1. Функция принимает параметр (например high)
+    2. Возвращает лямбда-функцию, которая запоминает значение priority
+    3. Лямбда проверяет, совпадает ли приоритет задачи с заданным
     """
-    def _pred(task: Task) -> bool:
-        return task.priority == priority
-    return _pred
+    return lambda task: task.priority == priority
+
 
 def by_assignee(user_id: str) -> Callable[[Task], bool]:
     """
     Замыкание для фильтрации задач по исполнителю.
-    Возвращает функцию-предикат.
+    Возвращает лямбда-функцию-предикат.
+    
+    1. Функция принимает user_id (например "u1")
+    2. Возвращает лямбда-функцию, которая запоминает значение user_id
+    3. Лямбда проверяет, совпадает ли исполнитель задачи с заданным
     """
-    def _pred(task: Task) -> bool:
-        return task.assignee == user_id
-    return _pred
+    return lambda task: task.assignee == user_id
+
 
 def by_date_range(start_iso: str, end_iso: str) -> Callable[[Task], bool]:
     """
     Замыкание для фильтрации задач по диапазону дат.
-    Возвращает функцию-предикат.
+    Возвращает лямбда-функцию-предикат.
+
+    1. Функция принимает даты в ISO формате ("2024-01-01T00:00:00")
+    2. Преобразует строки в объекты datetime
+    3. Возвращает лямбда-функцию, которая запоминает значения start и end
+    4. Лямбда проверяет, попадает ли дата создания задачи в диапазон
     """
     start = datetime.fromisoformat(start_iso)
     end = datetime.fromisoformat(end_iso)
     
-    def _pred(task: Task) -> bool:
-        created = datetime.fromisoformat(task.created)
-        return start <= created <= end
-    return _pred
+    return lambda task: start <= datetime.fromisoformat(task.created) <= end
+
 
 # Рекурсивные функции
 def walk_comments(comments: Tuple[Comment, ...], task_id: str, idx: int = 0) -> Tuple[Comment, ...]:
     """
     Рекурсивная функция для поиска комментариев по ID задачи.
     Использует рекурсию с индексом для обхода кортежа.
+    Демонстрирует использование лямбды для проверки условия.
+
+    1. Базовый случай: Если idx >= len(comments) - возвращаем пустой кортеж
+    2. Рекурсивный случай:
+        Берем текущий элемент: head = comments[idx]
+        Рекурсивно обрабатываем остальные элементы: tail = walk_comments(comments, task_id, idx + 1)
+        Используем лямбду для проверки условия: lambda c: c.task_id == task_id
+        Если текущий комментарий принадлежит нужной задаче: return (head,) + tail
+        Иначе: return tail
     """
     if idx >= len(comments):
         return tuple()
@@ -91,14 +136,27 @@ def walk_comments(comments: Tuple[Comment, ...], task_id: str, idx: int = 0) -> 
     head = comments[idx]
     tail = walk_comments(comments, task_id, idx + 1)
     
-    if head.task_id == task_id:
+    # Используем лямбду для проверки условия
+    is_target_task = lambda comment: comment.task_id == task_id
+    
+    if is_target_task(head):
         return (head,) + tail
     return tail
+
 
 def traverse_tasks(tasks: Tuple[Task, ...], status_order: Tuple[str, ...], idx: int = 0) -> Tuple[str, ...]:
     """
     Рекурсивная функция для обхода задач в определенном порядке статусов.
     Возвращает кортеж ID задач в указанном порядке статусов.
+    Демонстрирует использование лямбды для проверки статуса.
+
+    1. Базовый случай: Если idx >= len(tasks) - возвращаем пустой кортеж
+    2. Рекурсивный случай:
+        Берем текущую задачу: head = tasks[idx]
+        Рекурсивно обрабатываем остальные: tail = traverse_tasks(tasks, status_order, idx + 1)
+        Используем лямбду для проверки статуса: lambda s: s in status_order
+        Если статус задачи входит в status_order: return (head.id,) + tail
+        Иначе: return tail
     """
     if idx >= len(tasks):
         return tuple()
@@ -106,12 +164,29 @@ def traverse_tasks(tasks: Tuple[Task, ...], status_order: Tuple[str, ...], idx: 
     head = tasks[idx]
     tail = traverse_tasks(tasks, status_order, idx + 1)
     
-    # Проверяем, есть ли текущий статус в порядке статусов
-    if head.status in status_order:
+    # Используем лямбду для проверки статуса
+    is_valid_status = lambda status: status in status_order
+    
+    if is_valid_status(head.status):
         return (head.id,) + tail
     return tail
 
-# === Лаба #3: Продвинутая рекурсия + мемоизация ===
+    """UI: Фильтры задач в Streamlit находятся в app/main.py в функции show_lab2_filters_page (517)"""
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# === Лаба3: Продвинутая рекурсия + мемоизация ===
 
 # Дорогая функция с кэшированием
 @lru_cache(maxsize=128)
@@ -160,7 +235,23 @@ def measure_cache_performance():
     
     return time_function
 
-# === Лаба #4: Функциональные паттерны Maybe/Either ===
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# === Лаба4: Функциональные паттерны Maybe/Either ===
 
 def safe_task(tasks: Tuple[Task, ...], tid: str) -> 'Maybe[Task]':
     """
